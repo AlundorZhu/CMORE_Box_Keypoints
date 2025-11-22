@@ -27,3 +27,5 @@ I use `cvat` to label the data locallly. Follow [installation guide](https://doc
 
 ## Setup the project
 In the project tab, click on the `+` button and select `create from backup`. Then upload the [box.zip](./box.zip) file. 
+
+double check, point 8 is front top of the divider, point 7 is back top of the divider.
