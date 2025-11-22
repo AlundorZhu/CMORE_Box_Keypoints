@@ -25,4 +25,5 @@ video_name/
 # Label more data
 I use `cvat` to label the data locallly. Follow [installation guide](https://docs.cvat.ai/docs/administration/basics/installation/) to set it up locally. Or you can start with free trial on [cvat.ai](https://www.cvat.ai/) and pay as you go.
 
-
+## Setup the project
+In the project tab, click on the `+` button and select `create from backup`. Then upload the [box.zip](./box.zip) file. 
