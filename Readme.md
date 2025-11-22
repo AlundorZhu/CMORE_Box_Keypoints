@@ -81,5 +81,8 @@ array(['Box and Blocks_CONK_Affected_PT.mov',
       dtype='<U41')
 >>> 
 ```
+### Using the dataset
+Read [this page](data/readme.md)
 
-### Dataset structure
+## Evaluation 
+see [Evaluation Notebook](evaluate_keypoints.ipynb)
