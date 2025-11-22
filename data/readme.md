@@ -1,7 +1,8 @@
 # Storage
 Google drive: https://drive.google.com/drive/folders/1YqL_EXgGVSgUE8StAst-dKBM6HgvL_WS?usp=drive_link 
 ## File structure
-### For `IMG_*.MOV` files
+### For `IMG_*` folders
+
 These are the videos I shot, I made sure the box didn't move. So, There's only one `.txt` label file per video, which is used accross all frames.
 You can use the following script to duplicate the labels and extract frames:
 - [python script](../tools/generate_frames_n_labels.py)
