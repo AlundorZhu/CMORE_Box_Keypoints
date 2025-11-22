@@ -1,0 +1,10 @@
+path: /home/kid/Research/playground/keypoints/data
+train: /home/kid/Research/playground/keypoints/data/train
+val: /home/kid/Research/playground/keypoints/data/val
+
+kpt_shape: [10,3]
+flip_idx: [4, 5, 2, 3, 0, 1, 6, 7, 9, 8]
+
+names:
+  0: box
+
