@@ -29,7 +29,7 @@ I use `cvat` to label the data locallly. Follow [installation guide](https://doc
 In the project tab, click on the `+` button and select `create from backup`. Then upload the [box.zip](./box.zip) file. 
 
 ## Start labeling
-1. Create a new task, put it in the project (`box`) you just created,upload the video file you want to label.
+1. Create a new task, put it in the project (`box`) you just created,upload the video file you want to label. If the box doesn't move throughout the video, you can upload a single frame instead.
 2. Draw new skeleton, select `box` as the label and track.
 
 ![labeling](label.png)
@@ -39,4 +39,7 @@ The keypoint 8 is front top of the divider, point 7 is back top of the divider.
 
 **Quality of the labels:**
 Zoom into the keypoint and make sure they are on the box. Labeling it on the edge sometime can be tricky, so make the labels a bit inside the box to be safe.
+
+## Export the labels
+Once you finish labeling, export the labels in `Ultralytics YOLO pose 1.0` format. Include the images as well. Rename the exported zip file to `<video name>.zip`. CVAT has it's own way of structing the files, but you can pass me the zip file at this point... 
 
