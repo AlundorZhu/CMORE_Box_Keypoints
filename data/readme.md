@@ -28,4 +28,15 @@ I use `cvat` to label the data locallly. Follow [installation guide](https://doc
 ## Setup the project
 In the project tab, click on the `+` button and select `create from backup`. Then upload the [box.zip](./box.zip) file. 
 
-double check, point 8 is front top of the divider, point 7 is back top of the divider.
+## Start labeling
+1. Create a new task, put it in the project (`box`) you just created,upload the video file you want to label.
+2. Draw new skeleton, select `box` as the label and track.
+
+![labeling](label.png)
+
+**Notes:**
+The keypoint 8 is front top of the divider, point 7 is back top of the divider.
+
+**Quality of the labels:**
+Zoom into the keypoint and make sure they are on the box. Labeling it on the edge sometime can be tricky, so make the labels a bit inside the box to be safe.
+
