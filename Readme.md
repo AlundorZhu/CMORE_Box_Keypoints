@@ -81,3 +81,5 @@ array(['Box and Blocks_CONK_Affected_PT.mov',
       dtype='<U41')
 >>> 
 ```
+
+### Dataset structure
