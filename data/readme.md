@@ -21,3 +21,8 @@ video_name/
         video_name_frame_000002.txt
         ...
 ```
+
+# Label more data
+I use `cvat` to label the data locallly. Follow [installation guide](https://docs.cvat.ai/docs/administration/basics/installation/) to set it up locally. Or you can start with free trial on [cvat.ai](https://www.cvat.ai/) and pay as you go.
+
+
