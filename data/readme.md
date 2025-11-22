@@ -38,7 +38,7 @@ In the project tab, click on the `+` button and select `create from backup`. The
 The keypoint 8 is front top of the divider, point 7 is back top of the divider.
 
 **Quality of the labels:**
-Zoom into the keypoint and make sure they are on the box. Labeling it on the edge sometime can be tricky, so make the labels a bit inside the box to be safe.
+Zoom into the keypoint (with mouse scroll) and make sure they are on the box. Labeling it on the edge sometime can be tricky, so make the labels a bit inside the box to be safe.
 
 ## Export the labels
 Once you finish labeling, export the labels in `Ultralytics YOLO pose 1.0` format. Include the images as well. Rename the exported zip file to `<video name>.zip`. CVAT has it's own way of structing the files, but you can pass me the zip file at this point... 
