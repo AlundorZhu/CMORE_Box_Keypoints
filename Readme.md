@@ -86,3 +86,6 @@ Read [this page](data/readme.md)
 
 ## Evaluation 
 see [Evaluation Notebook](evaluate_keypoints.ipynb)
+
+## Results
+Different variantion of models tryed and their evaluation saved [here](https://drive.google.com/drive/folders/1PgNLM29D8r0BA55V6VQCzPNaQ8ExKbbc?usp=sharing)
