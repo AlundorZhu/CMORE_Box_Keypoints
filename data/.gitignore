@@ -1,2 +1,7 @@
 */
 *.tar.gz
+
+*.png
+*.jpg
+*.jpeg
+*.txt
