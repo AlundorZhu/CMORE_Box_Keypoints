@@ -2,6 +2,7 @@ from keypoint_detector import BoxDetector
 import sys
 import cv2
 import os
+import random
 
 # Check argument count
 if len(sys.argv) != 4:
@@ -34,7 +35,11 @@ if output_dir and not os.path.exists(output_dir):
 
 boxDetector = BoxDetector(MODEL_PATH)
 
-boxDetector.start_logging(CSV_OUTPUT_FOLDER + "/" + VIDEOS_PATH.split('/')[-1].split('.')[0] + '_box_keypoints.csv')
+# Create output paths
+video_name = os.path.splitext(os.path.basename(VIDEOS_PATH))[0]
+csv_output_path = os.path.join(CSV_OUTPUT_FOLDER, f"{video_name}_box_keypoints.csv")
+
+boxDetector.start_logging(csv_output_path)
 
 # Detect keypoints in every 10 frames of the video
 cap = cv2.VideoCapture(VIDEOS_PATH)
@@ -43,6 +48,8 @@ frame_count = 0
 # Get total frames for progress reporting
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 print(f"Starting keypoint detection on video with {total_frames} total frames")
+
+numSamples = 0
 
 while cap.isOpened():
 
@@ -60,6 +67,15 @@ while cap.isOpened():
     ok, box_detection = boxDetector.detect(frame)
     if ok:
         boxDetector.append(box_detection, current_time, frame_count)
+        random_number = random.random()
+
+        if random_number < (5/total_frames) and numSamples < 3:
+            numSamples += 1
+            # draw keypoints on frame for visualization
+            boxDetector.draw_keypoints(frame, box_detection)
+            # save the frame with keypoints drawn
+            output_image_path = os.path.join(CSV_OUTPUT_FOLDER, f"{video_name}_frame_{frame_count:06d}_sample_{numSamples}.jpg")
+            cv2.imwrite(output_image_path, frame)
 
     # Print progress every 100 frames
     if frame_count % 100 == 0:
@@ -70,4 +86,6 @@ while cap.isOpened():
 
 cap.release()
 boxDetector.close_log()
-print("Keypoints log saved to", CSV_OUTPUT_FOLDER)
+print(f"\nKeypoints log saved to: {csv_output_path}")
+if numSamples > 0:
+    print(f"Generated {numSamples} sample images in: {CSV_OUTPUT_FOLDER}")
