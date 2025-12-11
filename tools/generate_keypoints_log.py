@@ -69,7 +69,7 @@ while cap.isOpened():
         boxDetector.append(box_detection, current_time, frame_count)
         random_number = random.random()
 
-        if random_number < (5/total_frames) and numSamples < 3:
+        if random_number < (10/total_frames) and numSamples < 3:
             numSamples += 1
             # draw keypoints on frame for visualization
             boxDetector.draw_keypoints(frame, box_detection)
@@ -86,6 +86,5 @@ while cap.isOpened():
 
 cap.release()
 boxDetector.close_log()
-print(f"\nKeypoints log saved to: {csv_output_path}")
 if numSamples > 0:
     print(f"Generated {numSamples} sample images in: {CSV_OUTPUT_FOLDER}")
