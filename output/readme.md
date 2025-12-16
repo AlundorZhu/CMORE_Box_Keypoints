@@ -5,3 +5,12 @@
 - RUPD Un/Affected 
 - CONK Unaffected and 1 keypoint from affected
 - MASR Back keypoints
+- Subj_01_LeftHand
+- Subj_01_Right_BlackPhone.mp4
+- Subj_02_LeftHand back right
+- Subj_02_RightHand same above 
+- Subj_03_LeftHand 
+- Subj_03_RightHand same above
+- Subj_04_LeftHand
+- Subj_04_RightHand same above
+- Subj_06_RightHand 
