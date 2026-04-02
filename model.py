@@ -7,6 +7,7 @@ import config
 class SingleObjectKeypointDetector(nn.Module):
   def __init__(self, num_keypoints=config.NUM_KEYPOINTS):
     super().__init__()
+    self.num_keypoints = num_keypoints
 
     self.backbone = timm.create_model(
         config.MODEL_BACKBONE,
@@ -41,7 +42,7 @@ class SingleObjectKeypointDetector(nn.Module):
   def forward(self, x):
     features = self.backbone(x)[-1]
     out = self.head(features)
-    return out.view(-1, out.shape[1] // 3, 3)
+    return out.view(out.shape[0], self.num_keypoints, 3)
 
 class WingLossWithVisibility(nn.Module):
   def __init__(self, w=config.WING_LOSS_W, epsilon=config.WING_LOSS_EPSILON, lambda_vis=config.VISIBILITY_LOSS_LAMBDA):

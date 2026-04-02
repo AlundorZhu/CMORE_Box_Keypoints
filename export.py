@@ -1,8 +1,10 @@
 import torch
 import cv2
 import numpy as np
+import coremltools as ct
 import os
 import config
+from typing import cast
 from model import SingleObjectKeypointDetector, ModelWithNormalization
 
 def main():
@@ -86,6 +88,35 @@ def main():
     
     print("--- Test complete ---")
 
+    # 6. Convert to coreml format
+    print("--- Converting to CoreML format ---")
+    try:
+        coreml_input = ct.ImageType(
+            name="image",
+            shape=(1, 3, config.IMG_SIZE, config.IMG_SIZE),
+            color_layout=ct.colorlayout.RGB,
+            scale=1.0 / 255.0,
+        )
+        coreml_model = cast(ct.models.MLModel, ct.convert(
+            traced_model,
+            inputs=[coreml_input],
+            outputs=[ct.TensorType(name="keypoints")],
+            minimum_deployment_target=ct.target.iOS18
+        ))
+
+        coreml_model.short_description = "Single-object keypoint detector"
+        coreml_model.input_description["image"] = (
+            f"RGB image normalized to [0, 1], resized to {config.IMG_SIZE}x{config.IMG_SIZE}"
+        )
+        coreml_model.output_description["keypoints"] = (
+            f"Keypoints as [1, {config.NUM_KEYPOINTS}, 3] tensor (x_norm, y_norm, visibility_logit)"
+        )
+
+        coreml_path = config.EXPORTED_MODEL_NAME.replace(".pt", ".mlpackage")
+        coreml_model.save(coreml_path)
+        print(f"Success: Saved CoreML model to {coreml_path}")
+    except Exception as e:
+        print(f"Error: CoreML conversion failed. Error: {e}")
 
 if __name__ == '__main__':
     main()
