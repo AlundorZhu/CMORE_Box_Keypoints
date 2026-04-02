@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -29,6 +30,8 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 def validate(model, loader, criterion, device):
     model.eval()
     running_loss = 0.0
+    if len(loader) == 0:
+        return 0.0
     with torch.no_grad():
         for images, targets, masks in loader:
             images, targets, masks = images.to(device), targets.to(device), masks.to(device)
@@ -36,8 +39,6 @@ def validate(model, loader, criterion, device):
             loss, _, _ = criterion(preds, targets, masks)
             running_loss += loss.item()
     return running_loss / len(loader)
-
-import math
 
 def main():
     # Setup
@@ -55,7 +56,7 @@ def main():
     if os.path.exists(resume_path):
         print(f"Resuming training from {resume_path}")
         try:
-            checkpoint = torch.load(resume_path)
+            checkpoint = torch.load(resume_path, weights_only=True)
             model.load_state_dict(checkpoint['model_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             start_epoch = checkpoint['epoch'] + 1
@@ -119,6 +120,12 @@ def main():
             'best_val_loss': best_val_loss,
         }
         torch.save(checkpoint, os.path.join(config.CHECKPOINT_SAVE_DIR, config.LAST_MODEL_NAME))
+
+        # Save periodic checkpoint every 5 epochs
+        if (epoch + 1) % 5 == 0:
+            periodic_path = os.path.join(config.CHECKPOINT_SAVE_DIR, f"checkpoint_epoch_{epoch+1}.pth")
+            torch.save(checkpoint, periodic_path)
+            print(f"Periodic checkpoint saved: {periodic_path}")
 
         # Save best checkpoint
         if val_loss < best_val_loss:

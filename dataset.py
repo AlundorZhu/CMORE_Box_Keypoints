@@ -68,6 +68,8 @@ class KeypointDataset(Dataset):
   def __getitem__(self, idx):
     sample = self.data[idx]
     image = cv2.imread(sample['image_path'])
+    if image is None:
+        raise FileNotFoundError(f"Could not read image: {sample['image_path']}")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     h, w = image.shape[:2]
 
@@ -83,6 +85,17 @@ class KeypointDataset(Dataset):
       keypoints = kpts_px
 
     keypoints = np.array(keypoints, dtype=np.float32)
+
+    # Visibility: 0=not labeled, 1=occluded, 2=visible
+    # We want a binary target: 1 if visible (original_visibility > 1), 0 otherwise.
+    target_vis = (np.array(original_visibility) > 1).astype(np.float32)
+    # Mark keypoints pushed outside the image by augmentation as not visible
+    out_of_bounds = (
+        (keypoints[:, 0] < 0) | (keypoints[:, 0] >= self.img_size) |
+        (keypoints[:, 1] < 0) | (keypoints[:, 1] >= self.img_size)
+    )
+    target_vis[out_of_bounds] = 0.0
+
     # Clamp keypoints to be within image bounds after transform
     keypoints[:, 0] = np.clip(keypoints[:, 0], 0, self.img_size - 1)
     keypoints[:, 1] = np.clip(keypoints[:, 1], 0, self.img_size - 1)
@@ -90,10 +103,6 @@ class KeypointDataset(Dataset):
     # Normalize keypoints to [0, 1] for the loss function
     keypoints[:, 0] /= self.img_size
     keypoints[:, 1] /= self.img_size
-
-    # Visibility: 0=not labeled, 1=occluded, 2=visible
-    # We want a binary target: 1 if visible (original_visibility > 1), 0 otherwise.
-    target_vis = (np.array(original_visibility) > 1).astype(np.float32)
 
     return image, torch.tensor(keypoints, dtype=torch.float32), torch.tensor(target_vis, dtype=torch.float32)
 

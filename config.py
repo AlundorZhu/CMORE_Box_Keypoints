@@ -10,8 +10,8 @@ IMG_SIZE = 224
 MODEL_BACKBONE = 'mobilenetv4_conv_small.e2400_r224_in1k'
 
 # -- Training Configuration --
-DEVICE = 'cpu'
-BATCH_SIZE = 64
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+BATCH_SIZE = 128
 EPOCHS = 50
 LEARNING_RATE = 1e-4
 WEIGHT_DECAY = 1e-4
