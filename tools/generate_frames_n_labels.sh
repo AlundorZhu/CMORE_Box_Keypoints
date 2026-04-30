@@ -29,7 +29,7 @@ video_base="$(basename "$VIDEO_PATH")"
 fileName="${video_base%.*}"
 
 # Extract frames with default ffmpeg numbering (starts at 1)
-ffmpeg -hide_banner -loglevel error -i "$VIDEO_PATH" -vsync 0 "${FRAME_DIR}/${fileName}_frame_%06d.jpg"
+ffmpeg -hide_banner -loglevel error -i "$VIDEO_PATH" -vsync vfr "${FRAME_DIR}/${fileName}_frame_%06d.jpg"
 
 label_content="$(cat "$LABEL_TXT_PATH")"
 
