@@ -15,33 +15,41 @@ class SingleObjectKeypointDetector(nn.Module):
         features_only=True,
     )
 
-    last_channel_count = self.backbone.feature_info[-1]['num_chs']
+    last_chs = self.backbone.feature_info[-1]['num_chs']
+    prev_chs = self.backbone.feature_info[-2]['num_chs']
 
+    # Last stage: global semantic context
+    self.compress_last = nn.Sequential(
+        nn.Conv2d(last_chs, 128, kernel_size=1),
+        nn.BatchNorm2d(128), nn.ReLU6(inplace=True),
+        nn.Conv2d(128, 128, kernel_size=3, padding=1),
+        nn.BatchNorm2d(128), nn.ReLU6(inplace=True),
+        nn.AdaptiveAvgPool2d(1), nn.Flatten(),
+    )
+
+    # Previous stage: finer spatial detail
+    self.compress_prev = nn.Sequential(
+        nn.Conv2d(prev_chs, 64, kernel_size=1),
+        nn.BatchNorm2d(64), nn.ReLU6(inplace=True),
+        nn.AdaptiveAvgPool2d(1), nn.Flatten(),
+    )
+
+    # 128 + 64 = 192 combined features
     self.head = nn.Sequential(
-        nn.Conv2d(last_channel_count, 128, kernel_size=1),
-        nn.BatchNorm2d(128),
-        nn.ReLU6(inplace=True),
-
-        nn.Conv2d(128, 128, kernel_size=3, padding=1, groups=1),
-        nn.BatchNorm2d(128),
-        nn.ReLU6(inplace=True),
-
-        nn.AdaptiveAvgPool2d(1),
-        nn.Flatten(),
-
-        nn.Linear(128, 256),
+        nn.Linear(192, 256),
         nn.ReLU(),
-        nn.Dropout(0.2),
+        nn.Dropout(0.4),
         nn.Linear(256, num_keypoints * 3)
     )
 
-    # Initialize the final layer
     nn.init.normal_(self.head[-1].weight, mean=0, std=0.01)
     nn.init.constant_(self.head[-1].bias, 0)
 
   def forward(self, x):
-    features = self.backbone(x)[-1]
-    out = self.head(features)
+    features = self.backbone(x)
+    feat_last = self.compress_last(features[-1])
+    feat_prev = self.compress_prev(features[-2])
+    out = self.head(torch.cat([feat_last, feat_prev], dim=1))
     return out.view(out.shape[0], self.num_keypoints, 3)
 
 class WingLossWithVisibility(nn.Module):

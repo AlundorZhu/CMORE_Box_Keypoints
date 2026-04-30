@@ -6,7 +6,7 @@ from tqdm import tqdm
 import os
 import config
 from model import SingleObjectKeypointDetector, WingLossWithVisibility
-from dataset import KeypointDataset, load_yolo_dataset, get_train_transforms, get_val_transforms
+from dataset import KeypointDataset, DataPrefetcher, load_yolo_dataset, get_train_transforms, get_val_transforms
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -45,11 +45,22 @@ def main():
     os.makedirs(config.CHECKPOINT_SAVE_DIR, exist_ok=True)
     model = SingleObjectKeypointDetector(num_keypoints=config.NUM_KEYPOINTS).to(config.DEVICE)
     criterion = WingLossWithVisibility()
-    optimizer = optim.AdamW(model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY)
-    # We will handle the LR scheduling manually, so we remove the scheduler object.
+
+    # Phase 1: freeze backbone, train head only
+    for param in model.backbone.parameters():
+        param.requires_grad = False
+
+    head_params = (list(model.compress_last.parameters()) +
+                   list(model.compress_prev.parameters()) +
+                   list(model.head.parameters()))
+    optimizer = optim.AdamW([
+        {'params': model.backbone.parameters(), 'lr': 0.0,                  'weight_decay': config.WEIGHT_DECAY},
+        {'params': head_params,                 'lr': config.LEARNING_RATE, 'weight_decay': config.WEIGHT_DECAY},
+    ])
 
     start_epoch = 0
     best_val_loss = float('inf')
+    epochs_without_improvement = 0
 
     # Resume from checkpoint if specified
     resume_path = config.RESUME_CHECKPOINT or os.path.join(config.CHECKPOINT_SAVE_DIR, config.LAST_MODEL_NAME)
@@ -78,11 +89,11 @@ def main():
 
     print(f"Loaded {len(train_samples)} training samples and {len(val_samples)} validation samples.")
 
-    train_dataset = KeypointDataset(train_samples, transform=get_train_transforms())
+    train_dataset = KeypointDataset(train_samples, transform=get_train_transforms(), flip_pairs=config.FLIP_PAIRS)
     val_dataset = KeypointDataset(val_samples, transform=get_val_transforms())
 
-    train_loader = DataLoader(train_dataset, batch_size=config.BATCH_SIZE, shuffle=True, num_workers=2, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=config.BATCH_SIZE, shuffle=False, num_workers=2, pin_memory=True)
+    train_loader = DataPrefetcher(DataLoader(train_dataset, batch_size=config.BATCH_SIZE, shuffle=True, num_workers=5, pin_memory=True, persistent_workers=True), config.DEVICE)
+    val_loader = DataPrefetcher(DataLoader(val_dataset, batch_size=config.BATCH_SIZE, shuffle=False, num_workers=5, pin_memory=True, persistent_workers=True), config.DEVICE)
 
     # Training Loop
     print(f"Starting training on {config.DEVICE} for {config.EPOCHS} epochs...")
@@ -98,11 +109,16 @@ def main():
             cosine_factor = 0.5 * (1 + math.cos(math.pi * progress))
             new_lr = config.MIN_LR + (config.LEARNING_RATE - config.MIN_LR) * cosine_factor
 
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = new_lr
-        
-        current_lr = optimizer.param_groups[0]['lr']
-        
+        # Phase 2: unfreeze backbone at FREEZE_BACKBONE_EPOCHS
+        if epoch == config.FREEZE_BACKBONE_EPOCHS:
+            print("Unfreezing backbone for fine-tuning...")
+            for param in model.backbone.parameters():
+                param.requires_grad = True
+
+        optimizer.param_groups[0]['lr'] = new_lr * config.BACKBONE_LR_SCALE if epoch >= config.FREEZE_BACKBONE_EPOCHS else 0.0
+        optimizer.param_groups[1]['lr'] = new_lr
+        current_lr = optimizer.param_groups[1]['lr']
+
         train_loss = train_one_epoch(model, train_loader, criterion, optimizer, config.DEVICE)
         
         val_loss = 0.0
@@ -130,9 +146,15 @@ def main():
         # Save best checkpoint
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            epochs_without_improvement = 0
             # Save just the model state dict for the best model
             torch.save(model.state_dict(), os.path.join(config.CHECKPOINT_SAVE_DIR, config.BEST_MODEL_NAME))
             print(f"New best model saved with validation loss: {best_val_loss:.5f}")
+        else:
+            epochs_without_improvement += 1
+            if epochs_without_improvement >= config.EARLY_STOPPING_PATIENCE:
+                print(f"Early stopping: no improvement for {config.EARLY_STOPPING_PATIENCE} consecutive epochs.")
+                break
 
     print("Training complete.")
     print(f"Best validation loss: {best_val_loss:.5f}")
