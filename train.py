@@ -77,6 +77,10 @@ def main():
             print(f"Could not load checkpoint from {resume_path}. It might be from an old version. Starting fresh.")
             print(f"Error details: {e}")
 
+    if start_epoch > config.FREEZE_BACKBONE_EPOCHS:
+        print("Resuming past unfreeze epoch — unfreezing backbone.")
+        for param in model.backbone.parameters():
+            param.requires_grad = True
 
     # Data Loading
     print("Loading data...")
